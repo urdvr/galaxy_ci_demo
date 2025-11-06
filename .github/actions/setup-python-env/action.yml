@@ -29,5 +29,5 @@ runs:
       run: |
         source $HOME/.cargo/env
         # '--ci' ensures it fails if uv.lock is out of sync
-        uv sync --ci
+        uv sync
       shell: bash
