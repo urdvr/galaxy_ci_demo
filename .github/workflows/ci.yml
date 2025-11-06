@@ -91,10 +91,14 @@ jobs:
           ga_file=$(find . -name "*.ga" | head -n 1)
           python ${{ github.workspace }}/scripts/run_test.py --ga-file "$ga_file"
 
+      - name: Sanitize workflow dir for artifact name
+        id: sanitize_name
+        run: echo "name=$(echo '${{ matrix.workflow_dir }}' | tr '/' '_')" >> $GITHUB_OUTPUT
+
       - name: Upload Invocation ID Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: invocation-id-${{ matrix.workflow_dir }}
+          name: invocation-id-${{ steps.sanitize_name.outputs.name }}
           path: cleaned_workflows/${{ matrix.workflow_dir }}/invocation_id_*.txt
           retention-days: 1
 
