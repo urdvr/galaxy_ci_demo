@@ -8,7 +8,7 @@ def main():
     """
     print("--- Aggregating all invocation IDs ---")
     ids_dir = "all-invocation-ids"
-    combined_file = "combined_ids.txt"
+    combined_file = "all_invocation_ids.txt"
     
     if not os.path.exists(ids_dir):
         print(f"Error: Directory '{ids_dir}' not found!")
