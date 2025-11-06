@@ -102,14 +102,16 @@ jobs:
           path: cleaned_workflows/${{ matrix.workflow_dir }}/invocation_id_*.txt
           retention-days: 1
 
-  # -------------------------------------------------------------
-  # JOB 3: COMBINE (Fan-in)
-  # -------------------------------------------------------------
+  combine-and-recheck:
+    needs: test-workflows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
           persist-credentials: false
-
 
       - name: Setup Python Environment
         uses: ./.github/actions/setup-python-env
@@ -125,24 +127,24 @@ jobs:
       - name: Aggregate Results
         run: python scripts/aggregate_results.py
 
-      - name: Commit Invocation IDs
+      - name: Checkout the target branch
+        uses: actions/checkout@v4
+        with:
+          ref: 'invocation-tracking'
+          path: 'invocation-tracking'
+
+      - name: Create invocation timestamp file
         run: |
-          # Combine all invocation IDs into a single file and sort them
-          find all-invocation-ids -name "*.txt" -exec cat {} + | sort > all_invocation_ids.txt
-          
-          # Configure git
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          
-          # Clone the invocation-tracking repository
-          git clone -b invocation-tracking https://${{ secrets.WORKFLOW_TOKEN }}@github.com/ukuraud/galaxy_ci_demo.git
-          
-          
-          # Move the invocation IDs file to the repository
-          mv all_invocation_ids.txt invocation-tracking/
-          
-          # Commit and push the changes
+          find all-invocation-ids -name "*.txt" -exec cat {} + | sort > invocation-tracking/all_invocation_ids.txt
+
+      - name: Configure Git User
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Commit and Push
+        run: |
           cd invocation-tracking
           git add all_invocation_ids.txt
-          git commit -m "Add new invocation IDs"
-          git push
+          git commit -m "CI: Log new workflow invocation" || exit 0
+          git push origin invocation-tracking
