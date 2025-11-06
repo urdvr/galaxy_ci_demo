@@ -85,6 +85,9 @@ jobs:
       - name: Setup Python Environment
         uses: ./.github/actions/setup-python-env
 
+      - name: Install Planemo
+        run: uv tool install planemo
+
       - name: Run Test for ${{ matrix.workflow_dir }}
         working-directory: cleaned_workflows/${{ matrix.workflow_dir }}
         run: |
