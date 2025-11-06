@@ -104,7 +104,7 @@ jobs:
         run: |
           ga_file=$(find . -name "*.ga" | head -n 1)
           yml_file=$(find . -name "*.yml" | head -n 1)
-          python ${{ github.workspace }}/scripts/run_test.py "$ga_file" "$yml_file" ${{ steps.sanitixyz.outputs.safe }}
+          python ${{ github.workspace }}/scripts/run_test.py "$ga_file" "$yml_file" ${{ steps.sanitize.outputs.safe }}
 
 
       - name: Upload Invocation ID Artifact
