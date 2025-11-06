@@ -1,0 +1,87 @@
+# .github/workflows/ci.yml
+name: Dynamic Workflow CI Demo
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  # -------------------------------------------------------------
+  # JOB 1: SETUP (Fan-out prep)
+  # -------------------------------------------------------------
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix_json: ${{ steps.generate-matrix.outputs.matrix_json }}
+
+    steps:
+      - name: Setup Python Environment
+        uses: ./.github/actions/setup-python-env
+
+      - name: Create Data Dirs and Generate Matrix
+        id: generate-matrix
+        run: python scripts/prepare_data.py
+
+      - name: Upload Prepared Data as an Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: prepared-job-data
+          path: staging/
+          retention-days: 1
+
+  # -------------------------------------------------------------
+  # JOB 2: TEST (Parallel Fan-out)
+  # -------------------------------------------------------------
+  test-workflows:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The matrix is built dynamically from the JSON output of the setup job
+        workflow_id: ${{ fromJson(needs.setup.outputs.matrix_json) }}
+
+    steps:
+      - name: Setup Python Environment
+        uses: ./.github/actions/setup-python-env
+
+      - name: Download Prepared Data
+        uses: actions/download-artifact@v4
+        with:
+          name: prepared-job-data
+          path: . # Download to the root of the workspace
+
+      - name: Run Test for ${{ matrix.workflow_id }}
+        run: |
+          # The script is run inside the specific subdirectory for this job
+          cd ${{ matrix.workflow_id }}
+          python ../scripts/run_test.py --workflow-id ${{ matrix.workflow_id }}
+
+      - name: Upload Invocation ID Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: invocation-id-${{ matrix.workflow_id }}
+          path: ${{ matrix.workflow_id }}/invocation_id.txt
+          retention-days: 1
+
+  # -------------------------------------------------------------
+  # JOB 3: COMBINE (Fan-in)
+  # -------------------------------------------------------------
+  combine-and-recheck:
+    needs: test-workflows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Python Environment
+        uses: ./.github/actions/setup-python-env
+
+      - name: Download All Invocation ID Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          # Use a wildcard pattern to get all ID artifacts from the previous jobs
+          pattern: invocation-id-*
+          path: all-invocation-ids
+          merge-multiple: true # Recommended for pattern-based downloads
+
+      - name: Aggregate Results
+        run: python scripts/aggregate_results.py

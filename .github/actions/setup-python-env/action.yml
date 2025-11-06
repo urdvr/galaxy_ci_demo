@@ -1,0 +1,35 @@
+# .github/actions/setup-python-env/action.yml
+name: 'Setup Python Environment with uv'
+description: 'Checks out code, sets up Python, caches and installs deps from uv.lock.'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install uv
+      run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      shell: bash
+
+    - name: Cache uv dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/uv
+        # The cache key is based on the hash of the lock file.
+        # It only invalidates and re-installs when uv.lock changes.
+        key: ${{ runner.os }}-uv-${{ hashFiles('**/uv.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-uv-
+
+    - name: Install Python dependencies with uv
+      run: |
+        source $HOME/.cargo/env
+        # '--ci' ensures it fails if uv.lock is out of sync
+        uv sync --ci
+      shell: bash

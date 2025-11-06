@@ -1,0 +1,6 @@
+# This is a placeholder lock file.
+# To generate a real one based on your pyproject.toml and environment, run:
+#
+# uv pip compile pyproject.toml -o uv.lock
+#
+# Then, commit the generated uv.lock file to your repository.
