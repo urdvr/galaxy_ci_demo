@@ -142,6 +142,6 @@ jobs:
           
           # Commit and push the changes
           cd invocation-tracking
-          git add .
+          git add all_invocation_ids.txt
           git commit -m "Add new invocation IDs"
           git push
