@@ -18,7 +18,7 @@ def main(workflow_id):
     
     # Simulate planemo generating an invocation ID
     invocation_id = str(uuid.uuid4())
-    output_file = "invocation_id.txt"
+    output_file = f"invocation_id_{workflow_id}.txt"
     with open(output_file, "w") as f:
         f.write(invocation_id)
         

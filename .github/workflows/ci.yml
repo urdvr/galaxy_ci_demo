@@ -68,7 +68,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: invocation-id-${{ matrix.workflow_id }}
-          path: ${{ matrix.workflow_id }}/invocation_id.txt
+          path: ${{ matrix.workflow_id }}/invocation_id_${{ matrix.workflow_id }}.txt
           retention-days: 1
 
   # -------------------------------------------------------------
