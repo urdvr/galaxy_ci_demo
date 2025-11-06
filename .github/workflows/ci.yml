@@ -92,11 +92,10 @@ jobs:
           python ../../scripts/run_test.py --ga-file "$ga_file"
 
       - name: Upload Invocation ID Artifact
-        working-directory: cleaned_workflows/${{ matrix.workflow_dir }}
         uses: actions/upload-artifact@v4
         with:
           name: invocation-id-${{ matrix.workflow_dir }}
-          path: "invocation_id_*.txt"
+          path: cleaned_workflows/${{ matrix.workflow_dir }}/invocation_id_*.txt
           retention-days: 1
 
   # -------------------------------------------------------------
