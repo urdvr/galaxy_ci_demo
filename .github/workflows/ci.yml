@@ -36,19 +36,15 @@ jobs:
         if: steps.cache-workflows.outputs.cache-hit != 'true'
         run: ./scripts/download_workflows.sh .
 
+      - name: Build workflow artifacts
+        run: python scripts/build_workflow_artifacts.py --workflows-dir workflows --output-dir cleaned_workflows
+
       - name: Setup Python Environment
         uses: ./.github/actions/setup-python-env
 
-      - name: Create Data Dirs and Generate Matrix
+      - name: Generate Matrix from Cleaned Workflows
         id: generate-matrix
-        run: python scripts/prepare_data.py
-
-      - name: Upload Prepared Data as an Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: prepared-job-data
-          path: staging/
-          retention-days: 1
+        run: python scripts/generate_matrix.py --input-dir cleaned_workflows
 
   # -------------------------------------------------------------
   # JOB 2: TEST (Parallel Fan-out)
@@ -60,7 +56,7 @@ jobs:
       fail-fast: false
       matrix:
         # The matrix is built dynamically from the JSON output of the setup job
-        workflow_id: ${{ fromJson(needs.setup.outputs.matrix_json) }}
+        workflow_dir: ${{ fromJson(needs.setup.outputs.matrix_json) }}
 
     steps:
       - name: Check out repository
@@ -83,26 +79,24 @@ jobs:
         if: steps.cache-workflows.outputs.cache-hit != 'true'
         run: ./scripts/download_workflows.sh .
 
+      - name: Build workflow artifacts
+        run: python scripts/build_workflow_artifacts.py --workflows-dir workflows --output-dir cleaned_workflows
+
       - name: Setup Python Environment
         uses: ./.github/actions/setup-python-env
 
-      - name: Download Prepared Data
-        uses: actions/download-artifact@v4
-        with:
-          name: prepared-job-data
-          path: . # Download to the root of the workspace
-
-      - name: Run Test for ${{ matrix.workflow_id }}
+      - name: Run Test for ${{ matrix.workflow_dir }}
+        working-directory: cleaned_workflows/${{ matrix.workflow_dir }}
         run: |
-          # The script is run inside the specific subdirectory for this job
-          cd ${{ matrix.workflow_id }}
-          python ../scripts/run_test.py --workflow-id ${{ matrix.workflow_id }}
+          ga_file=$(find . -name "*.ga" | head -n 1)
+          python ../../scripts/run_test.py --ga-file "$ga_file"
 
       - name: Upload Invocation ID Artifact
+        working-directory: cleaned_workflows/${{ matrix.workflow_dir }}
         uses: actions/upload-artifact@v4
         with:
-          name: invocation-id-${{ matrix.workflow_id }}
-          path: ${{ matrix.workflow_id }}/invocation_id_${{ matrix.workflow_id }}.txt
+          name: invocation-id-${{ matrix.workflow_dir }}
+          path: "invocation_id_*.txt"
           retention-days: 1
 
   # -------------------------------------------------------------
