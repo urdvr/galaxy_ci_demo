@@ -52,6 +52,8 @@ jobs:
   test-workflows:
     needs: setup
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -114,6 +116,11 @@ jobs:
       - name: Setup Python Environment
         uses: ./.github/actions/setup-python-env
 
+      - name: Checkout invocation-tracking branch for commit
+        uses: actions/checkout@v4
+        with:
+          ref: 'invocation-tracking'
+
       - name: Download All Invocation ID Artifacts
         uses: actions/download-artifact@v4
         with:
@@ -125,24 +132,22 @@ jobs:
       - name: Aggregate Results
         run: python scripts/aggregate_results.py
 
+      - name: Configure Git User
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Commit Invocation IDs
         run: |
           # Combine all invocation IDs into a single file and sort them
           find all-invocation-ids -name "*.txt" -exec cat {} + | sort > all_invocation_ids.txt
           
-          # Configure git
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          
-          # Clone the invocation-tracking repository
-          git clone -b invocation-tracking https://${{ secrets.WORKFLOW_TOKEN }}@github.com/ukuraud/galaxy_ci_demo.git
-          
-          
-          # Move the invocation IDs file to the repository
-          mv all_invocation_ids.txt invocation-tracking/
-          
-          # Commit and push the changes
-          cd invocation-tracking
+          # Add the new file to the staging area
           git add all_invocation_ids.txt
-          git commit -m "Add new invocation IDs"
-          git push
+          
+          # Commit the file, but only if there are changes.
+          # The '|| exit 0' part prevents the workflow from failing if there's nothing to commit.
+          git commit -m "CI: Log new workflow invocation" || exit 0
+          
+          # Push the commit to the 'invocation-tracking' branch
+          git push origin invocation-tracking
