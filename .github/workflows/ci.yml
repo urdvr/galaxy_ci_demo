@@ -128,8 +128,8 @@ jobs:
 
       - name: Commit Invocation IDs
         run: |
-          # Combine all invocation IDs into a single file
-          find all-invocation-ids -name "*.txt" -exec cat {} + > all_invocation_ids.txt
+          # Combine all invocation IDs into a single file and sort them
+          find all-invocation-ids -name "*.txt" -exec cat {} + | sort > all_invocation_ids.txt
           
           # Configure git
           git config --global user.name "GitHub Actions"
