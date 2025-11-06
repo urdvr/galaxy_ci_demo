@@ -114,7 +114,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          persist-credentials: false
+          persist-credentials: true
 
       - name: Check out invocation-tracking branch for committing
         uses: actions/checkout@v4
@@ -144,4 +144,7 @@ jobs:
           branch: invocation-tracking
           file_pattern: all_invocation_ids.txt
           commit_message: "CI: Log new workflow invocation"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 
