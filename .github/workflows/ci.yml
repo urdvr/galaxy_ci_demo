@@ -105,12 +105,11 @@ jobs:
   # -------------------------------------------------------------
   # JOB 3: COMBINE (Fan-in)
   # -------------------------------------------------------------
-  combine-and-recheck:
-    needs: test-workflows
-    runs-on: ubuntu-latest
-    steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
 
       - name: Setup Python Environment
         uses: ./.github/actions/setup-python-env
