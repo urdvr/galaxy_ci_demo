@@ -26,7 +26,7 @@ def main():
     else:
         matrix = find_terminal_dirs(args.input_dir)
         matrix.sort() # Sort alphabetically
-        matrix = matrix[:2] # Take only the first 2
+        matrix = matrix # Take only the first 2
 
     matrix_json = json.dumps(matrix)
     

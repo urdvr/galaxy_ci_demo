@@ -17,31 +17,26 @@ def main(ga_file, yml_file, run_id):
         print("Error: GALAXY_USER_KEY environment variable not set.")
         exit(1)
 
+    command = [
+        "planemo", "run", ga_file, yml_file,
+        "--no_wait",
+        "--galaxy_url", "https://vgp.usegalaxy.org",
+        "--galaxy_user_key", api_key,
+        "--test_output_json", "out.json",
+        "--simultaneous_uploads",
+        "--check_uploads_ok"
+    ]
 
-    invocation_id = uuid4()
-    with open(f'invocation_id--{run_id}.txt', 'w+') as f:
-        f.write(f'{run_id}\t{invocation_id}')
-
-    # command = [
-    #     "planemo", "run", ga_file, yml_file,
-    #     "--no_wait",
-    #     "--galaxy_url", "https://vgp.usegalaxy.org",
-    #     "--galaxy_user_key", api_key,
-    #     "--test_output_json", "out.json",
-    #     "--simultaneous_uploads",
-    #     "--check_uploads_ok"
-    # ]
-    #
-    # try:
-    #     subprocess.run(command, check=True)
-    #     with open("out.json", "r") as f:
-    #         results = json.load(f)
-    #     invocation_id = results["tests"][0]["data"]["invocation_details"]["details"]["invocation_id"]
-    #     with open(f'invocation_id--{run_id}.txt', 'w+') as f:
-    #         f.write(f'{run_id}\t{invocation_id}')
-    # except (subprocess.CalledProcessError, FileNotFoundError, KeyError, IndexError) as e:
-    #     print(f"Error running planemo or parsing output: {e}")
-    #     exit(1)
+    try:
+        subprocess.run(command, check=True)
+        with open("out.json", "r") as f:
+            results = json.load(f)
+        invocation_id = results["tests"][0]["data"]["invocation_details"]["details"]["invocation_id"]
+        with open(f'invocation_id--{run_id}.txt', 'w+') as f:
+            f.write(f'{run_id}\t{invocation_id}')
+    except (subprocess.CalledProcessError, FileNotFoundError, KeyError, IndexError) as e:
+        print(f"Error running planemo or parsing output: {e}")
+        exit(1)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
