@@ -111,41 +111,53 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Check out repository
+      # Step 1: Check out the 'main' branch first to get access to scripts and local actions.
+      - name: Check out main branch for scripts
+        uses: actions/checkout@v4
+        with:
+          path: 'main' # Check out into a subdirectory named 'main'
+
+      # Step 2: Check out the 'invocation-tracking' branch into a separate directory.
+      # This is the branch we will modify and push to.
+      - name: Check out invocation-tracking branch for committing
         uses: actions/checkout@v4
         with:
           ref: 'invocation-tracking'
+          path: 'invocation-tracking' # Check out into a subdirectory
 
+      # Step 3: Now run the local action using the code from the 'main' checkout.
       - name: Setup Python Environment
-        uses: ./.github/actions/setup-python-env
+        uses: ./main/.github/actions/setup-python-env
 
+      # Step 4: Download artifacts as before.
       - name: Download All Invocation ID Artifacts
         uses: actions/download-artifact@v4
         with:
-          # Use a wildcard pattern to get all ID artifacts from the previous jobs
           pattern: invocation-id-*
-          path: all-invocation-ids
-          merge-multiple: true # Recommended for pattern-based downloads
+          # Place artifacts inside the 'main' checkout where the aggregation script is
+          path: main/all-invocation-ids
+          merge-multiple: true
 
+      # Step 5: Run the aggregation script from the 'main' checkout.
+      # The output will be placed inside the 'invocation-tracking' checkout.
       - name: Aggregate Results
-        run: python scripts/aggregate_results.py
+        working-directory: ./main
+        run: |
+          python scripts/aggregate_results.py
+          # Now, combine the results and place the final file in the other directory
+          find all-invocation-ids -name "*.txt" -exec cat {} + | sort > ../invocation-tracking/all_invocation_ids.txt
 
-      - name: Configure Git User
+      # Step 6: Move into the 'invocation-tracking' directory to perform Git operations.
+      - name: Commit and Push Invocation IDs
+        working-directory: ./invocation-tracking
         run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-      - name: Commit Invocation IDs
-        run: |
-          # Combine all invocation IDs into a single file and sort them
-          find all-invocation-ids -name "*.txt" -exec cat {} + | sort > all_invocation_ids.txt
           
-          # Add the new file to the staging area
           git add all_invocation_ids.txt
           
-          # Commit the file, but only if there are changes.
-          # The '|| exit 0' part prevents the workflow from failing if there's nothing to commit.
+          # Commit only if there are changes
           git commit -m "CI: Log new workflow invocation" || exit 0
           
-          # Push the commit to the 'invocation-tracking' branch
-          git push origin invocation-tracking
+          # Push the commit
+          git push
