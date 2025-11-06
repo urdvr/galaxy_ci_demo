@@ -89,7 +89,7 @@ jobs:
         working-directory: cleaned_workflows/${{ matrix.workflow_dir }}
         run: |
           ga_file=$(find . -name "*.ga" | head -n 1)
-          python ../../scripts/run_test.py --ga-file "$ga_file"
+          python ${{ github.workspace }}/scripts/run_test.py --ga-file "$ga_file"
 
       - name: Upload Invocation ID Artifact
         uses: actions/upload-artifact@v4
