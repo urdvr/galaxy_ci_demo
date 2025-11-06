@@ -1,34 +1,38 @@
-# scripts/run_test.py
 import argparse
-import time
-import uuid
+import json
+import subprocess
 import os
-from pathlib import Path
 
-def main(ga_file):
+def main(ga_file, yml_file):
     """
-    Simulates running a planemo test for a specific workflow.
+    Runs a planemo test for a specific workflow and extracts the invocation ID.
     """
     print(f"--- Running test for workflow: {ga_file} ---")
     print(f"Current directory: {os.getcwd()}")
-    
-    # Simulate a long-running test
-    time.sleep(5) 
-    
-    # Simulate planemo generating an invocation ID
-    invocation_id = str(uuid.uuid4())
-    
-    output_file_name = Path(ga_file).stem
-    output_file = f"invocation_id_{output_file_name}.txt"
-    
-    with open(output_file, "w") as f:
-        f.write(invocation_id)
-        
-    print(f"Test for '{ga_file}' complete. Invocation ID: {invocation_id}")
-    print(f"ID written to {output_file}")
+
+    command = [
+        "planemo", "run", ga_file, yml_file,
+        "--no_wait",
+        "--galaxy_url", "https://test.usegalaxy.org",
+        "--galaxy_user_key", "0f055db60f177b5b8129334512dc892f",
+        "--test_output_json", "out.json",
+        "--simultaneous_uploads",
+        "--check_uploads_ok"
+    ]
+
+    try:
+        subprocess.run(command, check=True)
+        with open("out.json", "r") as f:
+            results = json.load(f)
+        invocation_id = results["tests"][0]["data"]["invocation_details"]["details"]["invocation_id"]
+        print(invocation_id)
+    except (subprocess.CalledProcessError, FileNotFoundError, KeyError, IndexError) as e:
+        print(f"Error running planemo or parsing output: {e}")
+        exit(1)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ga-file", required=True, help="The path to the .ga workflow file.")
+    parser.add_argument("ga_file", help="The path to the .ga workflow file.")
+    parser.add_argument("yml_file", help="The path to the .yml test file.")
     args = parser.parse_args()
-    main(args.ga_file)
+    main(args.ga_file, args.yml_file)

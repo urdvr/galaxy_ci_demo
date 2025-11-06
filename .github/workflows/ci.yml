@@ -89,17 +89,14 @@ jobs:
         working-directory: cleaned_workflows/${{ matrix.workflow_dir }}
         run: |
           ga_file=$(find . -name "*.ga" | head -n 1)
-          python ${{ github.workspace }}/scripts/run_test.py --ga-file "$ga_file"
-
-      - name: Sanitize workflow dir for artifact name
-        id: sanitize_name
-        run: echo "name=$(echo '${{ matrix.workflow_dir }}' | tr '/' '_')" >> $GITHUB_OUTPUT
+          yml_file=$(find . -name "*.yml" | head -n 1)
+          python ${{ github.workspace }}/scripts/run_test.py "$ga_file" "$yml_file" > invocation_id.txt
 
       - name: Upload Invocation ID Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: invocation-id-${{ steps.sanitize_name.outputs.name }}
-          path: cleaned_workflows/${{ matrix.workflow_dir }}/invocation_id_*.txt
+          name: invocation-id-${{ matrix.workflow_dir }}
+          path: cleaned_workflows/${{ matrix.workflow_dir }}/invocation_id.txt
           retention-days: 1
 
   # -------------------------------------------------------------
