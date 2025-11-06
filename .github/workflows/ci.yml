@@ -16,6 +16,9 @@ jobs:
       matrix_json: ${{ steps.generate-matrix.outputs.matrix_json }}
 
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
       - name: Setup Python Environment
         uses: ./.github/actions/setup-python-env
 
@@ -43,6 +46,9 @@ jobs:
         workflow_id: ${{ fromJson(needs.setup.outputs.matrix_json) }}
 
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
       - name: Setup Python Environment
         uses: ./.github/actions/setup-python-env
 
@@ -72,8 +78,11 @@ jobs:
     needs: test-workflows
     runs-on: ubuntu-latest
     steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
       - name: Setup Python Environment
-        uses: ./.github/actions/setup-python-env
+        uses: ./.github/actions/-python-env
 
       - name: Download All Invocation ID Artifacts
         uses: actions/download-artifact@v4
