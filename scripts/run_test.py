@@ -19,7 +19,7 @@ def main(ga_file, yml_file):
     command = [
         "planemo", "run", ga_file, yml_file,
         "--no_wait",
-        "--galaxy_url", "https://test.usegalaxy.org",
+        "--galaxy_url", "https://test.galaxyproject.org",
         "--galaxy_user_key", api_key,
         "--test_output_json", "out.json",
         "--simultaneous_uploads",
