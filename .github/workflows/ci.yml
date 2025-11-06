@@ -135,7 +135,7 @@ jobs:
           git config --global user.email "actions@github.com"
           
           # Clone the invocation-tracking repository
-          git clone https://${{ secrets.WORKFLOW_TOKEN }}@github.com/Uku-Kaarel-Joll/invocation-tracking.git
+          git clone https://${{ secrets.WORKFLOW_TOKEN }}@github.com/ukuraud/galaxy_ci_demo/invocation-tracking.git
           
           # Move the invocation IDs file to the repository
           mv all_invocation_ids.txt invocation-tracking/
