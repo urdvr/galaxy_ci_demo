@@ -100,7 +100,7 @@ jobs:
       - name: Upload Invocation ID Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: invocation-id-${{ matrix.workflow_dir }}
+          name: invocation-id-${{ replace(matrix.workflow_dir, '/', '-') }}
           path: cleaned_workflows/${{ matrix.workflow_dir }}/invocation_id.txt
           retention-days: 1
 
