@@ -90,7 +90,8 @@ jobs:
 
       - name: Run Test for ${{ matrix.workflow_dir }}
         working-directory: cleaned_workflows/${{ matrix.workflow_dir }}
-        GALAXY_USER_KEY: ${{ secrets.TEST_GALAXYPROJECT_ORG_SECRET }}
+        env:
+          GALAXY_USER_KEY: ${{ secrets.TEST_GALAXYPROJECT_ORG_SECRET }}
         run: |
           ga_file=$(find . -name "*.ga" | head -n 1)
           yml_file=$(find . -name "*.yml" | head -n 1)
