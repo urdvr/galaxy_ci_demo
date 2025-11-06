@@ -25,6 +25,8 @@ def main():
         matrix = []
     else:
         matrix = find_terminal_dirs(args.input_dir)
+        matrix.sort() # Sort alphabetically
+        matrix = matrix[:5] # Take only the first 5
 
     matrix_json = json.dumps(matrix)
     
