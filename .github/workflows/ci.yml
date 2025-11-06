@@ -105,40 +105,28 @@ jobs:
   # -------------------------------------------------------------
   # JOB 3: COMBINE (Fan-in)
   # -------------------------------------------------------------
-  commit-results:
+  combine-and-recheck:
     needs: test-workflows
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
-      # Step 1: Check out the 'main' branch first to get access to scripts and local actions.
-      - name: Check out main branch for scripts
+      - name: Check out repository
         uses: actions/checkout@v4
         with:
-          path: 'main' # Check out into a subdirectory named 'main'
+          persist-credentials: false
 
-
-
-      # Step 3: Now run the local action using the code from the 'main' checkout.
       - name: Setup Python Environment
-        uses: ./main/.github/actions/setup-python-env
+        uses: ./.github/actions/setup-python-env
 
-      # Step 4: Download artifacts as before.
       - name: Download All Invocation ID Artifacts
         uses: actions/download-artifact@v4
         with:
+          # Use a wildcard pattern to get all ID artifacts from the previous jobs
           pattern: invocation-id-*
-          # Place artifacts inside the 'main' checkout where the aggregation script is
-          path: main/all-invocation-ids
-          merge-multiple: true
+          path: all-invocation-ids
+          merge-multiple: true # Recommended for pattern-based downloads
 
-      # Step 5: Run the aggregation script from the 'main' checkout.
-      # The output will be placed inside the 'invocation-tracking' checkout.
       - name: Aggregate Results
-        working-directory: ./main
-        run: |
-          python scripts/aggregate_results.py
-          # Now, combine the results and place the final file in the other directory
-          find all-invocation-ids -name "*.txt" -exec cat {} + | sort > all_invocation_ids.txt
-
+        run: python scripts/aggregate_results.py
 
