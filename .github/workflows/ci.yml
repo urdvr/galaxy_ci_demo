@@ -116,6 +116,12 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Check out invocation-tracking branch for committing
+        uses: actions/checkout@v4
+        with:
+          ref: 'invocation-tracking'
+          path: 'invocation-tracking' # Check out into a subdirectory
+
       - name: Setup Python Environment
         uses: ./.github/actions/setup-python-env
 
@@ -128,5 +134,14 @@ jobs:
           merge-multiple: true # Recommended for pattern-based downloads
 
       - name: Aggregate Results
-        run: python scripts/aggregate_results.py
+        run: |
+          python scripts/aggregate_results.py
+          find all-invocation-ids -name "*.txt" -exec cat {} + | sort > invocation-tracking/all_invocation_ids.txt
+
+      - name: Commit and Push Invocation IDs
+        uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          branch: invocation-tracking
+          file_pattern: invocation-tracking/all_invocation_ids.txt
+          commit_message: "CI: Log new workflow invocation"
 
