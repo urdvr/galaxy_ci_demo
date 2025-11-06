@@ -1,0 +1,2 @@
+VGP-assembly-v2_Assembly-Hifi-HiC-phasing-VGP4	14123254-904f-4cf8-a768-b5f6fe3e0fe0
+VGP-assembly-v2_Assembly-Hifi-Trio-phasing-VGP5	89e694a5-806f-49d8-b97c-7841f51b87b4
