@@ -12,7 +12,8 @@ if [ -z "$1" ]; then
   exit 1
 fi
 
-PARENT_DIR="$1"
+# Resolve the absolute path of the parent directory
+PARENT_DIR=$(realpath "$1")
 echo "Parent directory: $PARENT_DIR"
 
 # Create a temporary directory
