@@ -142,6 +142,7 @@ jobs:
       - name: Aggregate Results
         run: |
           python scripts/aggregate_results.py
+          mkdir invocation-tracking
           find all-invocation-ids -name "*.txt" -exec cat {} + | sort > invocation-tracking/all_invocation_ids.txt
 
       - name: Commit and Push Invocation IDs
