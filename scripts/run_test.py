@@ -3,7 +3,7 @@ import json
 import subprocess
 import os
 
-def main(ga_file, yml_file):
+def main(ga_file, yml_file, run_id):
     """
     Runs a planemo test for a specific workflow and extracts the invocation ID.
     """
@@ -31,7 +31,8 @@ def main(ga_file, yml_file):
         with open("out.json", "r") as f:
             results = json.load(f)
         invocation_id = results["tests"][0]["data"]["invocation_details"]["details"]["invocation_id"]
-        print(invocation_id)
+        with open('invocation_id--.txt', 'w+') as f:
+            f.write(f'{run_id}\t{invocation_id}')
     except (subprocess.CalledProcessError, FileNotFoundError, KeyError, IndexError) as e:
         print(f"Error running planemo or parsing output: {e}")
         exit(1)
@@ -40,5 +41,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("ga_file", help="The path to the .ga workflow file.")
     parser.add_argument("yml_file", help="The path to the .yml test file.")
+    parser.add_argument("run_id", help="The run ID to use for the invocation ID.")
     args = parser.parse_args()
-    main(args.ga_file, args.yml_file)
+    main(args.ga_file, args.yml_file, args.run_id)
