@@ -125,3 +125,24 @@ jobs:
 
       - name: Aggregate Results
         run: python scripts/aggregate_results.py
+
+      - name: Commit Invocation IDs
+        run: |
+          # Combine all invocation IDs into a single file
+          find all-invocation-ids -name "*.txt" -exec cat {} + > all_invocation_ids.txt
+          
+          # Configure git
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          
+          # Clone the invocation-tracking repository
+          git clone https://${{ secrets.WORKFLOW_TOKEN }}@github.com/Uku-Kaarel-Joll/invocation-tracking.git
+          
+          # Move the invocation IDs file to the repository
+          mv all_invocation_ids.txt invocation-tracking/
+          
+          # Commit and push the changes
+          cd invocation-tracking
+          git add .
+          git commit -m "Add new invocation IDs"
+          git push
