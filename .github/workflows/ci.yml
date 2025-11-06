@@ -111,41 +111,41 @@ jobs:
     permissions:
       contents: write
     steps:
-      # Step 1: Check out the 'main' branch for scripts and local actions.
+      # Step 1: Check out the 'main' branch first to get access to scripts and local actions.
       - name: Check out main branch for scripts
         uses: actions/checkout@v4
         with:
-          path: 'main'
+          path: 'main' # Check out into a subdirectory named 'main'
 
-      # Step 2: Check out the 'invocation-tracking' branch for committing.
+      # Step 2: Check out the 'invocation-tracking' branch into a separate directory.
+      # This is the branch we will modify and push to.
       - name: Check out invocation-tracking branch for committing
         uses: actions/checkout@v4
         with:
           ref: 'invocation-tracking'
-          path: 'invocation-tracking'
+          path: 'invocation-tracking' # Check out into a subdirectory
 
-      # Step 3: Run the local action FROM WITHIN THE 'main' DIRECTORY.
-      # This ensures 'uv sync' can find the pyproject.toml file.
+      # Step 3: Now run the local action using the code from the 'main' checkout.
       - name: Setup Python Environment
         uses: ./main/.github/actions/setup-python-env
-        # THIS IS THE FIX 👇
-        working-directory: ./main
 
-      # Step 4: Download artifacts.
+      # Step 4: Download artifacts as before.
       - name: Download All Invocation ID Artifacts
         uses: actions/download-artifact@v4
         with:
           pattern: invocation-id-*
-          path: all-invocation-ids # Download to a neutral top-level directory
+          # Place artifacts inside the 'main' checkout where the aggregation script is
+          path: main/all-invocation-ids
           merge-multiple: true
 
       # Step 5: Run the aggregation script from the 'main' checkout.
-      # It will read from 'all-invocation-ids' and write into 'invocation-tracking'
-      - name: Aggregate Results and Move File
+      # The output will be placed inside the 'invocation-tracking' checkout.
+      - name: Aggregate Results
         working-directory: ./main
         run: |
           python scripts/aggregate_results.py
-          find ../all-invocation-ids -name "*.txt" -exec cat {} + | sort > ../invocation-tracking/all_invocation_ids.txt
+          # Now, combine the results and place the final file in the other directory
+          find all-invocation-ids -name "*.txt" -exec cat {} + | sort > ../invocation-tracking/all_invocation_ids.txt
 
       # Step 6: Move into the 'invocation-tracking' directory to perform Git operations.
       - name: Commit and Push Invocation IDs
@@ -156,8 +156,8 @@ jobs:
           
           git add all_invocation_ids.txt
           
+          # Commit only if there are changes
           git commit -m "CI: Log new workflow invocation" || exit 0
           
-          # The 'git push' command here will use the credentials and context
-          # of the './invocation-tracking' checkout, pushing to its default branch.
+          # Push the commit
           git push
