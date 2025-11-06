@@ -88,6 +88,15 @@ jobs:
       - name: Install Planemo
         run: uv tool install planemo
 
+      - name: Sanitize workflow_dir for artifact name
+        id: sanitize
+        shell: bash
+        run: |
+          SAFE="${{ matrix.workflow_dir }}"
+          SAFE="${SAFE//\//_}"
+          echo "safe=${SAFE}" >> "$GITHUB_OUTPUT"
+
+
       - name: Run Test for ${{ matrix.workflow_dir }}
         working-directory: cleaned_workflows/${{ matrix.workflow_dir }}
         env:
@@ -97,19 +106,12 @@ jobs:
           yml_file=$(find . -name "*.yml" | head -n 1)
           python ${{ github.workspace }}/scripts/run_test.py "$ga_file" "$yml_file" ${{ matrix.workflow_dir }}
 
-      - name: Sanitize workflow_dir for artifact name
-        id: sanitize
-        shell: bash
-        run: |
-          SAFE="${{ matrix.workflow_dir }}"
-          SAFE="${SAFE//\//_}"
-          echo "safe=${SAFE}" >> "$GITHUB_OUTPUT"
 
       - name: Upload Invocation ID Artifact
         uses: actions/upload-artifact@v4
         with:
           name: invocation-id-${{ steps.sanitize.outputs.safe }}
-          path: cleaned_workflows/${{ matrix.workflow_dir }}/invocation_id.txt
+          path: cleaned_workflows/${{ matrix.workflow_dir }}/invocation_id--${{ steps.sanitize.outputs.safe }}.txt
           retention-days: 1
 
   # -------------------------------------------------------------
