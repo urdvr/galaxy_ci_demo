@@ -145,13 +145,10 @@ jobs:
           mkdir invocation-tracking
           find all-invocation-ids -name "*.txt" -exec cat {} + | sort > invocation-tracking/all_invocation_ids.txt
 
-      - name: Stage the invocation file to be committed
-        run: git add all_invocation_ids.txt
-
       - name: Commit and Push Invocation IDs
         uses: stefanzweifel/git-auto-commit-action@v7
         with:
-          branch: invocation-tracking
+          branch: main
           file_pattern: all_invocation_ids.txt
           commit_message: "CI: Log new workflow invocation"
         env:
