@@ -52,8 +52,6 @@ jobs:
   test-workflows:
     needs: setup
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -107,20 +105,19 @@ jobs:
   # -------------------------------------------------------------
   # JOB 3: COMBINE (Fan-in)
   # -------------------------------------------------------------
+  commit-results:
+    needs: test-workflows
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
       - name: Check out repository
         uses: actions/checkout@v4
         with:
-          persist-credentials: false
-
+          ref: 'invocation-tracking'
 
       - name: Setup Python Environment
         uses: ./.github/actions/setup-python-env
-
-      - name: Checkout invocation-tracking branch for commit
-        uses: actions/checkout@v4
-        with:
-          ref: 'invocation-tracking'
-          clean: false
 
       - name: Download All Invocation ID Artifacts
         uses: actions/download-artifact@v4
