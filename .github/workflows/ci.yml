@@ -126,12 +126,6 @@ jobs:
         with:
           persist-credentials: true
 
-      - name: Check out invocation-tracking branch for committing
-        uses: actions/checkout@v4
-        with:
-          ref: 'invocation-tracking'
-          path: 'invocation-tracking' # Check out into a subdirectory
-
       - name: Setup Python Environment
         uses: ./.github/actions/setup-python-env
 
