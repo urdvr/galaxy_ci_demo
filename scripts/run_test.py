@@ -10,11 +10,17 @@ def main(ga_file, yml_file):
     print(f"--- Running test for workflow: {ga_file} ---")
     print(f"Current directory: {os.getcwd()}")
 
+    # Retrieve the API key from an environment variable
+    api_key = os.environ.get("GALAXY_USER_KEY")
+    if not api_key:
+        print("Error: GALAXY_USER_KEY environment variable not set.")
+        exit(1)
+
     command = [
         "planemo", "run", ga_file, yml_file,
         "--no_wait",
         "--galaxy_url", "https://test.usegalaxy.org",
-        "--galaxy_user_key", "0f055db60f177b5b8129334512dc892f",
+        "--galaxy_user_key", api_key,
         "--test_output_json", "out.json",
         "--simultaneous_uploads",
         "--check_uploads_ok"
