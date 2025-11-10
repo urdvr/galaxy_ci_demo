@@ -54,6 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
         # The matrix is built dynamically from the JSON output of the setup job
         workflow_dir: ${{ fromJson(needs.setup.outputs.matrix_json) }}
