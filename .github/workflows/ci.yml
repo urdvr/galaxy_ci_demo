@@ -54,6 +54,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 2
       matrix:
         # The matrix is built dynamically from the JSON output of the setup job
         workflow_dir: ${{ fromJson(needs.setup.outputs.matrix_json) }}
@@ -102,16 +103,32 @@ jobs:
         env:
           GALAXY_USER_KEY: ${{ secrets.VGP_USEGALAXY_SECRET }}
         run: |
-          ga_file=$(find . -name "*.ga" | head -n 1)
-          yml_file=$(find . -name "*.yml" | head -n 1)
-          python ${{ github.workspace }}/scripts/run_test.py "$ga_file" "$yml_file" ${{ steps.sanitize.outputs.safe }}
+          # Find all .ga files and match them with corresponding .yml files
+          for ga_file in *.ga; do
+            if [ ! -f "$ga_file" ]; then
+              echo "No .ga files found in directory"
+              exit 1
+            fi
+
+            # Extract the base name (without .ga extension)
+            base_name="${ga_file%.ga}"
+            yml_file="${base_name}.yml"
+
+            if [ ! -f "$yml_file" ]; then
+              echo "Error: No matching test file found for $ga_file (expected $yml_file)"
+              exit 1
+            fi
+
+            echo "Testing workflow: $ga_file with test file: $yml_file"
+            python ${{ github.workspace }}/scripts/run_test.py "$ga_file" "$yml_file" "${{ steps.sanitize.outputs.safe }}--${base_name}"
+          done
 
 
       - name: Upload Invocation ID Artifact
         uses: actions/upload-artifact@v4
         with:
           name: invocation-id-${{ steps.sanitize.outputs.safe }}
-          path: cleaned_workflows/${{ matrix.workflow_dir }}/invocation_id--${{ steps.sanitize.outputs.safe }}.txt
+          path: cleaned_workflows/${{ matrix.workflow_dir }}/invocation_id--*.txt
           retention-days: 1
 
   # -------------------------------------------------------------
